@@ -116,7 +116,7 @@ data "terraform_remote_state" "platform" {
 
 module "tenant" {
   # your template copy — bump ?ref= to pull module fixes from upstream
-  source = "github.com/<your-username>/oci-k8s-template//modules/tenant?ref=v1.1.0"
+  source = "github.com/<your-username>/oci-k8s-template//modules/tenant?ref=v1.2.0"
 
   name           = "myproject"
   zone           = "your-domain.example"
@@ -138,7 +138,7 @@ a leaked token exposes only that tenant. `zone` is a plain input, so tenants
 can use different apex domains (or subdomains of a shared zone) without any
 central changes.
 
-Pin a release tag (`?ref=v1.1.0`). The
+Pin a release tag (`?ref=v1.2.0`). The
 [example tenant](examples/example-tenant/) shows the complete layout — its
 README is the onboarding runbook, including private-registry pull secrets and
 bridging Terraform outputs into sealed secrets.

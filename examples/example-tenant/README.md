@@ -47,7 +47,7 @@ developing inside the platform repo). Pin a tag; bump it later to pull module
 fixes from upstream:
 
 ```hcl
-source = "github.com/<your-username>/oci-k8s-template//modules/tenant?ref=v1.1.0"
+source = "github.com/<your-username>/oci-k8s-template//modules/tenant?ref=v1.2.0"
 ```
 
 Then `terraform apply`. Outputs include `tunnel_token`, `s3_access_key`,

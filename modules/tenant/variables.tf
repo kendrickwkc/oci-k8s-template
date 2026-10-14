@@ -74,6 +74,13 @@ variable "worker_script_path" {
   default     = null
 }
 
+variable "worker_secret_bindings" {
+  description = "Extra secret_text bindings for the assets Worker (name => value), e.g. a shared HMAC key"
+  type        = map(string)
+  default     = {}
+  sensitive   = true
+}
+
 locals {
   fqdn        = var.hostname == "@" ? var.zone : "${var.hostname}.${var.zone}"
   app_service = var.app_service != null ? var.app_service : "http://${var.name}:8080"

@@ -68,6 +68,13 @@ resource "cloudflare_workers_script" "assets" {
     name = "OCI_S3_SECRET_KEY"
     text = oci_identity_customer_secret_key.tenant.key
   }
+  dynamic "secret_text_binding" {
+    for_each = var.worker_secret_bindings
+    content {
+      name = secret_text_binding.key
+      text = secret_text_binding.value
+    }
+  }
 }
 
 resource "cloudflare_workers_domain" "assets" {
