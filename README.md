@@ -126,6 +126,8 @@ module "tenant" {
   buckets        = ["myproject-assets", "myproject-backups"]   # prefix with tenant name
   worker_enabled = true
   assets_bucket  = "myproject-assets"
+  # Extra secret_text bindings for a custom Worker script (v1.2.0+):
+  # worker_secret_bindings = { MEDIA_TOKEN_SECRET = var.media_token_secret }
 }
 ```
 
