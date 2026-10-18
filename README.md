@@ -128,6 +128,10 @@ module "tenant" {
   assets_bucket  = "myproject-assets"
   # Extra secret_text bindings for a custom Worker script (v1.2.0+):
   # worker_secret_bindings = { MEDIA_TOKEN_SECRET = var.media_token_secret }
+  # Or serve from a Cloudflare R2 bucket instead of OCI (v1.3.0+); the custom
+  # Worker script reads the binding (worker_r2_binding_name, default MEDIA_BUCKET):
+  # worker_storage_backend = "r2"
+  # r2_bucket_name         = "myproject-assets"
 }
 ```
 

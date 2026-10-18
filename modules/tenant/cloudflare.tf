@@ -39,7 +39,9 @@ resource "cloudflare_record" "app" {
 }
 
 # ── Assets Worker (optional) ──────────────────────────────
-# Serves a private bucket over Cloudflare using the OCI S3-compatible API.
+# Serves a private bucket over Cloudflare. Storage backend is either the OCI
+# S3-compatible API (SigV4 with the tenant's customer secret key) or a native
+# R2 bucket binding (worker_storage_backend = "r2").
 
 resource "cloudflare_workers_script" "assets" {
   count              = var.worker_enabled ? 1 : 0
@@ -48,25 +50,33 @@ resource "cloudflare_workers_script" "assets" {
   content            = file(coalesce(var.worker_script_path, "${path.module}/files/worker.js"))
   compatibility_date = "2023-01-01"
 
-  plain_text_binding {
-    name = "OCI_NAMESPACE"
-    text = data.oci_objectstorage_namespace.ns.namespace
+  dynamic "plain_text_binding" {
+    for_each = var.worker_storage_backend == "oci" ? {
+      OCI_NAMESPACE = data.oci_objectstorage_namespace.ns.namespace
+      OCI_REGION    = var.region
+      OCI_BUCKET    = var.assets_bucket
+    } : {}
+    content {
+      name = plain_text_binding.key
+      text = plain_text_binding.value
+    }
   }
-  plain_text_binding {
-    name = "OCI_REGION"
-    text = var.region
+  dynamic "secret_text_binding" {
+    for_each = var.worker_storage_backend == "oci" ? {
+      OCI_S3_ACCESS_KEY = oci_identity_customer_secret_key.tenant.id
+      OCI_S3_SECRET_KEY = oci_identity_customer_secret_key.tenant.key
+    } : {}
+    content {
+      name = secret_text_binding.key
+      text = secret_text_binding.value
+    }
   }
-  plain_text_binding {
-    name = "OCI_BUCKET"
-    text = var.assets_bucket
-  }
-  secret_text_binding {
-    name = "OCI_S3_ACCESS_KEY"
-    text = oci_identity_customer_secret_key.tenant.id
-  }
-  secret_text_binding {
-    name = "OCI_S3_SECRET_KEY"
-    text = oci_identity_customer_secret_key.tenant.key
+  dynamic "r2_bucket_binding" {
+    for_each = var.worker_storage_backend == "r2" ? [var.r2_bucket_name] : []
+    content {
+      name        = var.worker_r2_binding_name
+      bucket_name = r2_bucket_binding.value
+    }
   }
   dynamic "secret_text_binding" {
     for_each = var.worker_secret_bindings

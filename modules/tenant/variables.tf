@@ -52,14 +52,42 @@ variable "worker_enabled" {
 }
 
 variable "assets_bucket" {
-  description = "Bucket served by the assets Worker (required when worker_enabled)"
+  description = "OCI bucket served by the assets Worker (required when worker_enabled and worker_storage_backend = \"oci\")"
   type        = string
   default     = null
 
   validation {
-    condition     = !var.worker_enabled || var.assets_bucket != null
-    error_message = "assets_bucket is required when worker_enabled is true"
+    condition     = !var.worker_enabled || var.worker_storage_backend == "r2" || var.assets_bucket != null
+    error_message = "assets_bucket is required when worker_enabled is true and worker_storage_backend is \"oci\""
   }
+}
+
+variable "worker_storage_backend" {
+  description = "Storage backend the assets Worker reads from: \"oci\" (S3-compat + SigV4) or \"r2\" (native R2 bucket binding)"
+  type        = string
+  default     = "oci"
+
+  validation {
+    condition     = contains(["oci", "r2"], var.worker_storage_backend)
+    error_message = "worker_storage_backend must be \"oci\" or \"r2\""
+  }
+}
+
+variable "r2_bucket_name" {
+  description = "R2 bucket served by the assets Worker (required when worker_storage_backend = \"r2\")"
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.worker_storage_backend != "r2" || var.r2_bucket_name != null
+    error_message = "r2_bucket_name is required when worker_storage_backend is \"r2\""
+  }
+}
+
+variable "worker_r2_binding_name" {
+  description = "Binding name the assets Worker reads the R2 bucket from (worker_storage_backend = \"r2\")"
+  type        = string
+  default     = "MEDIA_BUCKET"
 }
 
 variable "assets_hostname" {
@@ -69,9 +97,14 @@ variable "assets_hostname" {
 }
 
 variable "worker_script_path" {
-  description = "Path to a custom Worker script (defaults to the module's generic worker.js)"
+  description = "Path to a custom Worker script (defaults to the module's generic OCI worker.js; required for worker_storage_backend = \"r2\")"
   type        = string
   default     = null
+
+  validation {
+    condition     = var.worker_storage_backend != "r2" || var.worker_script_path != null
+    error_message = "worker_script_path is required when worker_storage_backend is \"r2\" (the default worker.js targets OCI)"
+  }
 }
 
 variable "worker_secret_bindings" {
