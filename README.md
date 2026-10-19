@@ -116,7 +116,7 @@ data "terraform_remote_state" "platform" {
 
 module "tenant" {
   # your template copy — bump ?ref= to pull module fixes from upstream
-  source = "github.com/<your-username>/oci-k8s-template//modules/tenant?ref=v1.2.0"
+  source = "github.com/<your-username>/oci-k8s-template//modules/tenant?ref=v1.3.0"
 
   name           = "myproject"
   zone           = "your-domain.example"
@@ -128,10 +128,14 @@ module "tenant" {
   assets_bucket  = "myproject-assets"
   # Extra secret_text bindings for a custom Worker script (v1.2.0+):
   # worker_secret_bindings = { MEDIA_TOKEN_SECRET = var.media_token_secret }
-  # Or serve from a Cloudflare R2 bucket instead of OCI (v1.3.0+); the custom
-  # Worker script reads the binding (worker_r2_binding_name, default MEDIA_BUCKET):
+  # Or serve from an existing Cloudflare R2 bucket instead of OCI (v1.3.0+).
+  # The module binds the bucket but does not create it; worker_script_path is
+  # required and the script reads the binding (worker_r2_binding_name, default
+  # MEDIA_BUCKET). OCI buckets/identity are still provisioned when `buckets`
+  # is set. R2 mode needs cloudflare >= 4.52.
   # worker_storage_backend = "r2"
   # r2_bucket_name         = "myproject-assets"
+  # worker_script_path     = "workers/myproject-assets.js"
 }
 ```
 
@@ -144,7 +148,7 @@ a leaked token exposes only that tenant. `zone` is a plain input, so tenants
 can use different apex domains (or subdomains of a shared zone) without any
 central changes.
 
-Pin a release tag (`?ref=v1.2.0`). The
+Pin a release tag (`?ref=v1.3.0`). The
 [example tenant](examples/example-tenant/) shows the complete layout — its
 README is the onboarding runbook, including private-registry pull secrets and
 bridging Terraform outputs into sealed secrets.
@@ -171,7 +175,8 @@ only way to decrypt sealed secrets.
   device). A Terraform MySQL provider is a future option.
 - **Single availability domain.** Fault domains, not multiple ADs, stay
   within the free tier.
-- **Cloudflare provider v4.** The v5 migration is a known follow-up.
+- **Cloudflare provider v4.** R2 mode needs `>= 4.52` (`r2_bucket_binding` on
+  Worker scripts); the v5 migration is a known follow-up.
 - **One block-backed PVC.** Stateful extras must fit the remaining 50 GB.
 - **Pinned images.** cloudflared and the Tailscale operator chart are pinned;
   bump deliberately.
@@ -179,7 +184,9 @@ only way to decrypt sealed secrets.
   addresses.
 - **Bastion is open by default** (`bastion_client_cidrs = ["0.0.0.0/0"]`);
   set it to the tailnet CIDR once Tailscale runs.
-- **The assets Worker serves its bucket publicly** — static assets only.
+- **The bundled assets Worker serves its bucket publicly** — static assets
+  only. Custom Worker scripts (e.g. R2 mode) can gate access via
+  `worker_secret_bindings`.
 
 ## License
 

@@ -36,7 +36,7 @@ variable "compartment_id" {
 }
 
 variable "region" {
-  description = "OCI region (used by the assets Worker binding)"
+  description = "OCI region (resources; also the assets Worker's SigV4 region when worker_storage_backend = \"oci\")"
   type        = string
 }
 
@@ -46,7 +46,7 @@ variable "buckets" {
 }
 
 variable "worker_enabled" {
-  description = "Create a Cloudflare Worker that serves a bucket over the OCI S3-compat API"
+  description = "Create a Cloudflare Worker that serves a bucket (OCI S3-compat by default, or a native R2 binding when worker_storage_backend = \"r2\")"
   type        = bool
   default     = false
 }

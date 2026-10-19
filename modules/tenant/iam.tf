@@ -1,8 +1,9 @@
 # ── Per-tenant OCI identity ───────────────────────────────
-# One user + group + customer secret key. The key is used both by the
-# Cloudflare assets Worker (S3 SigV4 read) and by any in-cluster job (e.g. a
-# backup CronJob) that talks to Object Storage. It is scoped, via policy, to
-# only the tenant's own buckets.
+# One user + group + customer secret key. The key is used by the Cloudflare
+# assets Worker in "oci" mode (S3 SigV4 read) and by any in-cluster job (e.g.
+# a backup CronJob) that talks to Object Storage; R2-mode Worker scripts use
+# their own R2 token instead. It is scoped, via policy, to only the tenant's
+# own buckets.
 
 resource "oci_identity_user" "tenant" {
   compartment_id = var.tenancy_id

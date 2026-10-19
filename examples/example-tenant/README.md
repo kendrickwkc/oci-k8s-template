@@ -16,7 +16,8 @@ first. Everything below runs inside your copy.
 - An OCI identity scoped to those buckets only
 - A Cloudflare Tunnel + DNS record for your app (`name` = tenant name)
 - An optional assets Worker serving the assets bucket at
-  `assets.<your-domain>` (public by design — don't put private files there)
+  `assets.<your-domain>` (the bundled OCI-mode Worker is public by design —
+  don't put private files there; a custom R2-mode script can gate access)
 - A demo app (nginx) + the cloudflared connector wired to the tunnel
 
 ## Steps
@@ -47,7 +48,7 @@ developing inside the platform repo). Pin a tag; bump it later to pull module
 fixes from upstream:
 
 ```hcl
-source = "github.com/<your-username>/oci-k8s-template//modules/tenant?ref=v1.2.0"
+source = "github.com/<your-username>/oci-k8s-template//modules/tenant?ref=v1.3.0"
 ```
 
 Then `terraform apply`. Outputs include `tunnel_token`, `s3_access_key`,
@@ -167,7 +168,8 @@ it to `k8s/kustomization.yaml`.
 
 ## Notes
 
-- The assets Worker reads the private bucket with the tenant's S3 key and
-  serves it **publicly** (static assets only).
+- The bundled assets Worker reads the private bucket with the tenant's S3 key
+  and serves it **publicly** (static assets only). A custom Worker script
+  (e.g. R2 mode) can gate access via module `worker_secret_bindings`.
 - If the app pulls from a private registry, see
   [Private registry pull secrets](#private-registry-pull-secrets-ocir).
